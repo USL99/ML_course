@@ -18,7 +18,8 @@ class LinearRegression:
         l2_coef: float = 0.0,
         tolerance: float = 1e-6,
         max_iter: int = 1000,
-        loss_function: LossFunction = LossFunction.MSE
+        loss_function: LossFunction = LossFunction.MSE,
+        verbose: bool = False, print_every: int = 10
     ):
         self.optimizer = optimizer
         if isinstance(optimizer, BaseDescent):
@@ -31,6 +32,8 @@ class LinearRegression:
         self.X_train = None
         self.y_train = None
         self.loss_history = []
+        self.verbose = verbose
+        self.print_every = print_every
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         if self.w is None:
@@ -79,12 +82,26 @@ class LinearRegression:
             b = X.T @ y
             self.w = np.linalg.solve(A, b)
 
+            self.loss_history = [self.compute_loss(X, y)]
+            if
+
             return self
 
         elif isinstance(self.optimizer, BaseDescent):
+            self.optimizer.set_model(self)
+            self.lost_history = []
+            prev = self.compute_loss(X, y)
+            self.loss_history.append(prev)
+
             for _ in range(self.max_iter):
                 self.optimizer.step()
+                tot = self.compute_loss(X, y)
+                self.loss_history.append(tot)
+                if abs(prev - tot) < self.tolerance:
+                    break
+                prev = tot
 
+            return self
 
-        # elif self.optimizer is ...
+                # elif self.optimizer is ...
 
