@@ -53,7 +53,8 @@ class VanillaGradientDescent(BaseDescent):
         # Можно использовать атрибуты класса self.model
         X_train = self.model.X_train
         y_train = self.model.y_train
-        # gradient = ...
+        gradient = self.model.compute_gradients(X_train, y_train)
+        self.model.w = self.model.w - self.lr_schedule.get_lr(self.iteration) * gradient
         raise NotImplementedError
 
 #

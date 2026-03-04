@@ -75,7 +75,7 @@ class LinearRegression:
         self.w = np.zeros(d, dtype = float)
         self._sigma2 = float(np.linalg.norm(X, ord = 2) ** 2)
 
-        if self.optimizer in None:
+        if self.optimizer is None:
             A = X.T @ X + (n *self.l2_coef)*np.eye(d)
             b = X.T @ y
             self.w = np.linalg.solve(A, b)
@@ -84,9 +84,9 @@ class LinearRegression:
         return self
 
         elif isinstance(self.optimizer, BaseDescent):
-            # ...
             for _ in range(self.max_iter):
-                # 1 шаг градиентного спуска
-                _
+                self.optimaser.step()
+
+
         # elif self.optimizer is ...
         raise NotImplementedError("Linear Regression training is not implemented")
