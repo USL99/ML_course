@@ -23,9 +23,8 @@ class TimeDecayLR(LearningRateSchedule):
         self.lambda_ = lambda_
 
     def get_lr(self, iteration: int) -> float:
-        # TODO: реализовать формулу затухающего шага обучения
-        raise NotImplementedError
-
+        lr_t = float(self.s0 / (1 + self.lambda_ * iteration) ** self.p)
+        return lr_t
 
 # ===== Base Optimizer =====
 class BaseDescent(ABC):
@@ -55,7 +54,7 @@ class VanillaGradientDescent(BaseDescent):
         y_train = self.model.y_train
         gradient = self.model.compute_gradients(X_train, y_train)
         self.model.w = self.model.w - self.lr_schedule.get_lr(self.iteration) * gradient
-        raise NotImplementedError
+
 
 #
 # class StochasticGradientDescent(BaseDescent):

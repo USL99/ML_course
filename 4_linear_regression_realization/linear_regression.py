@@ -37,7 +37,6 @@ class LinearRegression:
             raise ValueError("Model is not fitted yet")
         return X @ self.w
 
-        raise NotImplementedError("predict function is not implemented")
 
     def compute_gradients(self, X: np.ndarray, y: np.ndarray) -> np.ndarray:
         if self.w is None:
@@ -49,8 +48,8 @@ class LinearRegression:
             g = (2.0 / n) * (X.T @ r)
             if self.l2_coef !=0.0:
                 g = g + 2.0 * self.l2_coef * self.w
-                return g
-            raise NotImplementedError("MSE gradients is not implemented")
+            return g
+
         # # elif self.loss_function is ...
         # return None
 
@@ -80,13 +79,12 @@ class LinearRegression:
             b = X.T @ y
             self.w = np.linalg.solve(A, b)
 
-
-        return self
+            return self
 
         elif isinstance(self.optimizer, BaseDescent):
             for _ in range(self.max_iter):
-                self.optimaser.step()
+                self.optimizer.step()
 
 
         # elif self.optimizer is ...
-        raise NotImplementedError("Linear Regression training is not implemented")
+
