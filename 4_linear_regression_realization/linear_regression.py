@@ -80,6 +80,7 @@ class LinearRegression:
             b = X.T @ y
             self.w = np.linalg.solve(A, b)
 
+
         return self
 
         elif isinstance(self.optimizer, BaseDescent):
