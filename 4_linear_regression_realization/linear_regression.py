@@ -76,8 +76,12 @@ class LinearRegression:
         self._sigma2 = float(np.linalg.norm(X, ord = 2) ** 2)
 
         if self.optimizer in None:
-            # Analytic solution
-            pass
+            A = X.T @ X + (n *self.l2_coef)*np.eye(d)
+            b = X.T @ y
+            self.w = np.linalg.solve(A, b)
+
+        return self
+
         elif isinstance(self.optimizer, BaseDescent):
             # ...
             for _ in range(self.max_iter):
