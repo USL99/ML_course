@@ -1,4 +1,5 @@
 import numpy as np
+import os
 from descents import BaseDescent
 from dataclasses import dataclass
 from enum import auto, Enum
@@ -34,6 +35,8 @@ class LinearRegression:
         self.loss_history = []
         self.verbose = verbose
         self.print_every = print_every
+        self.verbose = verbose or (os.getenv("LINREG_DEBUG") == "1")
+        self.print_every = int(os.getenv("LINREG_PRINT_EVERY", str(print_every)))
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         if self.w is None:
@@ -43,7 +46,7 @@ class LinearRegression:
 
     def compute_gradients(self, X: np.ndarray, y: np.ndarray) -> np.ndarray:
         if self.w is None:
-            raise ValueError("Weight are not initialized")
+            raise ValueError("Weights are not initialized")
 
         if self.loss_function is LossFunction.MSE:
             n = X.shape[0]
@@ -55,6 +58,7 @@ class LinearRegression:
 
         # # elif self.loss_function is ...
         # return None
+        raise NotImplementedError(f"Gradients for {self.loss_function} are not implemented")
 
     def compute_loss(self, X: np.ndarray, y: np.ndarray) -> float:
         if self.w is None:
@@ -65,31 +69,38 @@ class LinearRegression:
             reg = float(self.l2_coef * np.sum(self.w ** 2))
             return MSE + reg
 
-        raise NotImplementedError("MSE is not implemented")
+        raise NotImplementedError(f"Loss {self.loss_function} is not implemented")
         # # elif self.loss_function is ...
         # return 0.0
 
     def fit(self, X: np.ndarray, y: np.ndarray):
-        # TODO: реализовать обучение модели
         self.X_train, self.y_train = X, y
+        if self.verbose:
+            print(f"[fit] X_shape={X.shape}, y_shape={y.shape}, l2={self.l2_coef}")
         n, d = X.shape
 
         self.w = np.zeros(d, dtype = float)
         self._sigma2 = float(np.linalg.norm(X, ord = 2) ** 2)
 
         if self.optimizer is None:
-            A = X.T @ X + (n *self.l2_coef)*np.eye(d)
-            b = X.T @ y
-            self.w = np.linalg.solve(A, b)
+
+            if self.l2_coef == 0.0:
+                self.w = np.linalg.lstsq(X, y, rcond = None)[0]
+            else:
+                A = X.T @ X + (n * self.l2_coef) * np.eye(d)
+                b = X.T @ y
+                self.w = np.linalg.solve(A, b)
 
             self.loss_history = [self.compute_loss(X, y)]
-            if
+            if self.verbose:
+                loss = self.loss_history[-1]
+                print(f"[analytic] loss={loss}, ||w|| = {np.linalg.norm(self.w)}, w[:5] = {self.w[:5]}")
 
             return self
 
         elif isinstance(self.optimizer, BaseDescent):
             self.optimizer.set_model(self)
-            self.lost_history = []
+            self.loss_history = []
             prev = self.compute_loss(X, y)
             self.loss_history.append(prev)
 
