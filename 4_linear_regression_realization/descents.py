@@ -23,9 +23,8 @@ class TimeDecayLR(LearningRateSchedule):
         self.lambda_ = lambda_
 
     def get_lr(self, iteration: int) -> float:
-        # TODO: реализовать формулу затухающего шага обучения
-        raise NotImplementedError
-
+        lr_t = float(self.s0 / (1 + self.lambda_ * iteration) ** self.p)
+        return lr_t
 
 # ===== Base Optimizer =====
 class BaseDescent(ABC):
@@ -49,13 +48,22 @@ class BaseDescent(ABC):
 # ===== Specific Optimizers =====
 class VanillaGradientDescent(BaseDescent):
     def update_weights(self):
-        # TODO: реализовать vanilla градиентный спуск
         # Можно использовать атрибуты класса self.model
         X_train = self.model.X_train
         y_train = self.model.y_train
-        # gradient = ...
-        raise NotImplementedError
+        lr = float(self.lr_schedule.get_lr(self.iteration))
+        gradient = self.model.compute_gradients(X_train, y_train)
+        self.model.w = self.model.w - self.lr_schedule.get_lr(self.iteration) * gradient
 
+
+        if getattr(self.model, "verbose", False) and (
+                self.iteration < 5 or self.iteration % getattr(self.model, "print_every", 10) == 0
+        ):
+            print(
+                f"[GD] iter={self.iteration:04d} lr={lr:.3g} "
+                f"||grad||={np.linalg.norm(gradient):.3g} ||w||={np.linalg.norm(self.model.w):.3g} "
+                f"w[:5]={self.model.w[:5]}"
+            )
 #
 # class StochasticGradientDescent(BaseDescent):
 #     def __init__(self, lr_schedule: LearningRateSchedule = TimeDecayLR, batch_size=1):

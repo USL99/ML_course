@@ -1,0 +1,4 @@
+With information output (flags:true)
+LINREG_DEBUG=1 LINREG_PRINT_EVERY=1 python3 -m pytest -q -s test_lin_reg.py
+Without information output:
+python3 -m pytest -q -s test_lin_reg.py
