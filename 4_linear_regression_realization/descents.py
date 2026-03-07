@@ -64,18 +64,29 @@ class VanillaGradientDescent(BaseDescent):
                 f"||grad||={np.linalg.norm(gradient):.3g} ||w||={np.linalg.norm(self.model.w):.3g} "
                 f"w[:5]={self.model.w[:5]}"
             )
-#
-# class StochasticGradientDescent(BaseDescent):
-#     def __init__(self, lr_schedule: LearningRateSchedule = TimeDecayLR, batch_size=1):
-#         super().__init__(lr_schedule)
-#         self.batch_size = batch_size
-#
-#     def update_weights(self):
-#         # TODO: реализовать стохастический градиентный спуск
-#         # 1) выбрать случайный батч
-#         # 2) вычислить градиенты на батче
-#         # 3) обновить веса модели
-#         raise NotImplementedError
+
+class StochasticGradientDescent(BaseDescent):
+    def __init__(self, lr_schedule: LearningRateSchedule = TimeDecayLR, batch_size=1):
+        super().__init__(lr_schedule)
+        self.batch_size = batch_size
+
+    def update_weights(self):
+        # TODO: реализовать стохастический градиентный спуск
+        # 1) выбрать случайный батч
+        # 2) вычислить градиенты на батче
+        # 3) обновить веса модели
+        X_train = self.model.X_train
+        y_train = self.model.y_train
+        n = X_train.shape[0]
+        batch_s = min (self.batch_size, n)
+        index_b = np.random.choice(n, size = batch_s, replace = False)
+        X_bs = X_train[index_b]
+        y_bs = y_train[index_b]
+
+        lr = float(self.lr_schedule.get_lr(self.iteration))
+        gradient = self.model.compute_gradients(X_bs, y_bs)
+        self.model.w = self.model.w - self.lr_schedule.get_lr(self.iteration) * gradient
+
 #
 #
 # class SAGDescent(BaseDescent):
