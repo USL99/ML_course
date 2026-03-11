@@ -12,6 +12,7 @@ class LossFunction(Enum):
     LogCosh = auto()
     Huber = auto()
 
+
 class LinearRegression:
     def __init__(
         self,
@@ -20,7 +21,9 @@ class LinearRegression:
         tolerance: float = 1e-6,
         max_iter: int = 1000,
         loss_function: LossFunction = LossFunction.MSE,
-        verbose: bool = False, print_every: int = 10
+        huber_delta: float = 1.0,
+        verbose: bool = False,
+        print_every: int = 10
     ):
         self.optimizer = optimizer
         if isinstance(optimizer, BaseDescent):
@@ -29,6 +32,7 @@ class LinearRegression:
         self.tolerance = tolerance
         self.max_iter = max_iter
         self.loss_function = loss_function
+        self.huber_delta = float(huber_delta)
         self.w = None
         self.X_train = None
         self.y_train = None
@@ -43,35 +47,60 @@ class LinearRegression:
             raise ValueError("Model is not fitted yet")
         return X @ self.w
 
-
     def compute_gradients(self, X: np.ndarray, y: np.ndarray) -> np.ndarray:
         if self.w is None:
             raise ValueError("Weights are not initialized")
 
-        if self.loss_function is LossFunction.MSE:
-            n = X.shape[0]
-            r = (X @ self.w) - y
-            g = (2.0 / n) * (X.T @ r)
-            if self.l2_coef !=0.0:
-                g = g + 2.0 * self.l2_coef * self.w
-            return g
+        y = y.ravel()
+        n = X.shape[0]
+        r = (X @ self.w) - y
 
-        # # elif self.loss_function is ...
-        # return None
-        raise NotImplementedError(f"Gradients for {self.loss_function} are not implemented")
+        if self.loss_function is LossFunction.MSE:
+            g = (2.0 / n) * (X.T @ r)
+
+        elif self.loss_function is LossFunction.MAE:
+            s = np.sign(r)  # -1, 0, +1
+            g = (1.0 / n) * (X.T @ s)
+
+        elif self.loss_function is LossFunction.Huber:
+            delta = self.huber_delta
+            abs_r = np.abs(r)
+            psi = np.where(abs_r < delta, r, delta * np.sign(r))
+            g = (1.0 / n) * (X.T @ psi)
+
+        else:
+            raise NotImplementedError(f"Gradients for {self.loss_function} are not implemented")
+
+        if self.l2_coef !=0.0:
+            g = g + 2.0 * self.l2_coef * self.w
+
+        return g
 
     def compute_loss(self, X: np.ndarray, y: np.ndarray) -> float:
         if self.w is None:
             raise ValueError("Weight are not initialized")
 
-        if self.loss_function is LossFunction.MSE:
-            MSE = float(np.mean((X @ self.w - y) ** 2))
-            reg = float(self.l2_coef * np.sum(self.w ** 2))
-            return MSE + reg
+        y = y.ravel()
+        r = (X @ self.w) - y
 
-        raise NotImplementedError(f"Loss {self.loss_function} is not implemented")
-        # # elif self.loss_function is ...
-        # return 0.0
+        if self.loss_function is LossFunction.MSE:
+            base = float(np.mean(r ** 2))
+
+        elif self.loss_function is LossFunction.MAE:
+            base = float(np.mean(np.abs(r)))
+
+        elif self.loss_function is LossFunction.Huber:
+            delta = self.huber_delta
+            abs_r = np.abs(r)
+            quadratic = (r ** 2) / 2
+            lin = delta * abs_r - 0.5 * (delta ** 2)
+            base = float(np.mean(np.where(abs_r < delta, quadratic, lin)))
+
+        else:
+            raise NotImplementedError(f"Loss {self.loss_function} is not implemented")
+
+        reg = float(self.l2_coef * np.sum(self.w ** 2))
+        return base + reg
 
     def fit(self, X: np.ndarray, y: np.ndarray):
         self.X_train, self.y_train = X, y
@@ -113,6 +142,4 @@ class LinearRegression:
                 prev = tot
 
             return self
-
-                # elif self.optimizer is ...
 
