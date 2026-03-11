@@ -1,7 +1,7 @@
 import numpy as np
 from abc import ABC, abstractmethod
 
-# ===== Learning Rate Schedules =====
+
 class LearningRateSchedule(ABC):
     @abstractmethod
     def get_lr(self, iteration: int) -> float:
@@ -26,7 +26,6 @@ class TimeDecayLR(LearningRateSchedule):
         lr_t = float(self.s0 / (1 + self.lambda_ * iteration) ** self.p)
         return lr_t
 
-# ===== Base Optimizer =====
 class BaseDescent(ABC):
     def __init__(self, lr_schedule: LearningRateSchedule = TimeDecayLR):
         self.lr_schedule = lr_schedule()
@@ -45,16 +44,13 @@ class BaseDescent(ABC):
         self.iteration += 1
 
 
-# ===== Specific Optimizers =====
 class VanillaGradientDescent(BaseDescent):
     def update_weights(self):
-        # Можно использовать атрибуты класса self.model
         X_train = self.model.X_train
         y_train = self.model.y_train
         lr = float(self.lr_schedule.get_lr(self.iteration))
         gradient = self.model.compute_gradients(X_train, y_train)
-        self.model.w = self.model.w - self.lr_schedule.get_lr(self.iteration) * gradient
-
+        self.model.w = self.model.w - lr * gradient
 
         if getattr(self.model, "verbose", False) and (
                 self.iteration < 5 or self.iteration % getattr(self.model, "print_every", 10) == 0
@@ -65,16 +61,13 @@ class VanillaGradientDescent(BaseDescent):
                 f"w[:5]={self.model.w[:5]}"
             )
 
+
 class StochasticGradientDescent(BaseDescent):
     def __init__(self, lr_schedule: LearningRateSchedule = TimeDecayLR, batch_size=1):
         super().__init__(lr_schedule)
         self.batch_size = batch_size
 
     def update_weights(self):
-        # TODO: реализовать стохастический градиентный спуск
-        # 1) выбрать случайный батч
-        # 2) вычислить градиенты на батче
-        # 3) обновить веса модели
         X_train = self.model.X_train
         y_train = self.model.y_train
         n = X_train.shape[0]
@@ -85,7 +78,7 @@ class StochasticGradientDescent(BaseDescent):
 
         lr = float(self.lr_schedule.get_lr(self.iteration))
         gradient = self.model.compute_gradients(X_bs, y_bs)
-        self.model.w = self.model.w - self.lr_schedule.get_lr(self.iteration) * gradient
+        self.model.w = self.model.w - lr * gradient
 
 #
 #
